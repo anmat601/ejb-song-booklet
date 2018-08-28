@@ -1,0 +1,184 @@
+<!doctype html>
+<html>
+<head>
+<script src="https://apis.google.com/js/client.js"></script>
+<script src="../controllers/YoutubePlayer.js"></script>
+<script
+	src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular.min.js"></script>
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script
+	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="../controllers/MySongBookletCtrl.js"></script>
+<link rel="stylesheet" type="text/css" href="../style/mysongbooklet.css">
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+
+<body ng-app="mysongbooklet" ng-controller="MySongBookletCtrl"
+	ng-keydown="keyPressEvent($event)">
+	<div id="customNavBar">
+		<h2 class="navheaderText">
+			<b>My Song Booklet</b>
+			<h2>
+	</div>
+	<div id="bodyMasterbox" class="grape"
+		ng-init="getSongDetailsFrmServer()">
+		<div style="text-align:right;">
+			<div style="display: inline-block">
+				<div style="margin: 10px 20px 10px 0px;">
+			<input type="text" class="form-control"
+					ng-model="songSearch" class="inputBorderTextBox"
+					 ng-focus="inputInFocus='SongName';"placeholder="Search"></input></div>
+				<div style="position:absolute; background-color:whitesmoke;text-align:left;">
+					<p ng-repeat="songKey in getFilteredListOfSongData('SongName',songSearch)"
+						ng-click="populateSelection('SongName',songKey);"
+						ng-class="{ 'songSelectionBox-Selected': searchTextBoxSelection===songKey, 'songSelectionBox-noSelection': searchTextBoxSelection!=songKey }">{{songs[songKey].SongName.S}}</p>
+				</div>
+				</div>
+		</div>
+		<div class="boxedDiv">
+			<div class="bottomBorderDiv">
+				
+				<input style="margin: 10px 20px 10px 20px;"
+					ng-model="songs[selectedSong].SongName.S" class="inputTextBox"
+					 ng-disabled="!editMode"></input>
+			</div>
+			<table id="songDetailsTable">
+				<tr>
+					<th><h3>Program Owner:&nbsp;&nbsp;&nbsp;&nbsp;</h3></th>
+					<td><input class="inputTextBox"
+						ng-model="songs[selectedSong].ProgramOwner.S"
+						ng-disabled="!editMode" ng-focus="inputInFocus='ProgramOwner';"></input>
+						<div>
+							<p ng-repeat="songKey in getFilteredListOfSongData('ProgramOwner')"
+								ng-click="populateSelection('ProgramOwner',songKey)"
+								ng-class="{ 'songSelectionBox-Selected': searchTextBoxSelection===songKey, 'songSelectionBox-noSelection': searchTextBoxSelection!=songKey }">{{songs[songKey].ProgramOwner.S}}</p>
+						</div></td>
+				</tr>
+				<tr>
+					<th><h3>Style</h3></th>
+					<td><input class="inputTextBox"
+						ng-model="songs[selectedSong].Style.S" ng-disabled="!editMode"
+						ng-focus="inputInFocus='Style';"></input>
+						<div>
+							<p ng-repeat="songKey in getFilteredListOfSongData('Style')"
+								ng-click="populateSelection('Style',songKey)"
+								ng-class="{ 'songSelectionBox-Selected': searchTextBoxSelection===songKey, 'songSelectionBox-noSelection': searchTextBoxSelection!=songKey }">{{songs[songKey].Style.S}}</p>
+						</div></td>
+					<td><input class="inputTextBox"
+						ng-model="songs[selectedSong].TimeSignature.S"
+						ng-disabled="!editMode" ng-focus="inputInFocus='TimeSignature';"></input>
+						<div>
+							<p ng-repeat="songKey in getFilteredListOfSongData('TimeSignature')"
+								ng-click="populateSelection('TimeSignature',songKey)"
+								ng-class="{ 'songSelectionBox-Selected': searchTextBoxSelection===songKey, 'songSelectionBox-noSelection': searchTextBoxSelection!=songKey }">{{songs[songKey].TimeSignature.S}}</p>
+						</div></td>
+				</tr>
+				<tr>
+					<th><h3>Scale</h3></th>
+					<td><input class="inputTextBox"
+						ng-model="songs[selectedSong].Scale.S" ng-disabled="!editMode"
+						ng-focus="inputInFocus='Scale';"></input>
+						<div>
+							<p ng-repeat="songKey in getFilteredListOfSongData('Scale')"
+								ng-click="populateSelection('Scale',songKey)"
+								ng-class="{ 'songSelectionBox-Selected': searchTextBoxSelection===songKey, 'songSelectionBox-noSelection': searchTextBoxSelection!=songKey }">{{songs[songKey].Scale.S}}</p>
+						</div></td>
+				</tr>
+				<tr>
+					<th><h3>Tempo</h3></th>
+					<td><input class="inputTextBox"
+						ng-model="songs[selectedSong].Tempo.S" ng-disabled="!editMode"></input>
+					</td>
+				</tr>
+				<tr>
+					<th><h3>Comments</h3></th>
+					<td><textarea class="inputTextArea"
+						ng-model="songs[selectedSong].additionalComments.S"
+						ng-disabled="!editMode"></textarea></td>
+				</tr>
+			</table>
+
+		</div>
+		<div id="buttonsDiv">
+			<label class="btn btn-primary active"> <input type="checkbox"
+				ng-model="editMode"> EDIT
+			</label>
+			<button type="button" ng-click="prepareForNewSong()"
+				ng-disabled="!editMode" class="btn btn-primary">NEW SONG</button>
+			<button type="button" ng-click="saveSong()" class="btn btn-primary"
+				ng-disabled="!editMode">SAVE SONG</button>
+			<button type="button" class="btn btn-primary" ng-disabled="!editMode">DELETE
+				SONG</button>
+			<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">LOAD LIST</button>
+			<button type="button" class="btn btn-primary" ng-click="addSongToActiveList()">ADD SONG TO LIST</button>
+		</div>
+		<div class="boxedDiv" ng-show="activeSongList!=undefined">
+			<div class="bottomBorderDiv">
+				<h3 style="margin-left:20px">{{activeSongList}}</h3>
+				<div id="buttonsDiv" style="margin-bottom:5px">
+					<label class="btn btn-primary active"> <input type="checkbox" ng-model="listEditMode"> EDIT LIST</label>
+					<button type="button" class="btn btn-primary">DELETE LIST</button>
+				</div>
+			</div>
+			<div style="margin-left: 20px;">
+				<h4 ng-show="songGroup[activeSongList]==undefined||songGroup[activeSongList].length==0">- No Songs in this list</h4>
+				<div ng-repeat="x in songGroup[activeSongList]" style="display: inline-block;width:250px;">
+					<input type="checkbox" ng-show="listEditMode">
+					<div ng-click="loadSong(x)"
+					ng-class="{ 'songSelectionBox-Selected': selectedSong===x, 'songSelectionBox-noSelection': selectedSong!=x }">
+					<h4>{{songs[x].SongName.S}}</h4>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="boxedDiv">
+			<div class="bottomBorderDiv" ng-show="showAllSongs" >
+				<div style="margin-left:20px;margin-top:10px;margin-bottom:10px;">
+					<button type="button" class="btn btn-primary" ng-click="showAllSongs=false;">HIDE</button>					
+				</div>
+			</div>
+			<div style="margin-left: 20px;">
+				<div style="margin-top:10px;margin-bottom:10px;" ng-show="!showAllSongs">
+					<button type="button" class="btn btn-primary"  ng-click="showAllSongs=true;arrowKeyGroup='AllSongs';">SHOW ALL SONGS</button>
+				</div>
+				<div ng-show="showAllSongs">
+				<div ng-repeat="x in songGroup['All Songs']" ng-click="loadSong(x)"
+					ng-class="{ 'songSelectionBox-Selected': selectedSong===x, 'songSelectionBox-noSelection': selectedSong!=x }">
+					<h4>{{songs[x].SongName.S}}</h4>
+				</div>
+				</div>
+			</div>
+		</div>
+		
+	</div>
+
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
+		aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="exampleModalLabel">Load Song List</h5>
+					<button type="button" class="close" data-dismiss="modal"
+						aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body" ng-init="getSongListsFrmServer()">
+				<input class="inputTextBox" ng-model="searchSongList"></input>
+				<p ng-repeat="key in getFilteredSongLists()"
+								ng-click="loadList(key,true)"
+								ng-class="{ 'songSelectionBox-Selected': searchSongList===key, 'songSelectionBox-noSelection': searchSongList!=key }">{{key}}</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary"
+						data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary" ng-click="loadList(searchSongList,true)">Load List</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</body>
+</html>
